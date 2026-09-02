@@ -57,7 +57,6 @@ const BookingSchema = new mongoose.Schema({
   timestamps: true 
 });
 
-// Add index for better query performance
 BookingSchema.index({ user: 1, createdAt: -1 });
 BookingSchema.index({ event: 1 });
 BookingSchema.index({ service: 1 });

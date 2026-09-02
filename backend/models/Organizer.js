@@ -15,7 +15,6 @@ OrganizerSchema.pre('save', async function (next) {
   next();
 });
 
-// Add password comparison method
 OrganizerSchema.methods.correctPassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };

@@ -19,6 +19,14 @@ const EventSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  capacity: {
+    type: Number,
+    default: 100
+  },
+  availableTickets: {
+    type: Number,
+    default: 100
+  },
   packages: [{
     type: {
       type: String,
