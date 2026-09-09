@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { io } from 'socket.io-client';
+import axios from '../../src/utils/axios';
 
 const PublicEventDetailPage = () => {
   const { id } = useParams();
@@ -37,19 +38,11 @@ const PublicEventDetailPage = () => {
   const fetchEventDetails = async (eventId) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/api/user/events/${eventId}`);
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Event not found');
-        }
-        throw new Error('Failed to fetch event details');
-      }
-
-      const data = await response.json();
+      const response = await axios.get(`/user/events/${eventId}`);
+      const data = response.data;
       setEvent(data.event);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message);
       console.error('Error fetching event details:', err);
     } finally {
       setLoading(false);
@@ -65,33 +58,19 @@ const PublicEventDetailPage = () => {
 
     try {
       setBookingLoading(true);
-      const token = localStorage.getItem('token');
-
-      const response = await fetch('http://localhost:5000/api/user/bookings', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          eventId: event._id,
-          ticketType,
-          quantity,
-          customerNotes: `Booking for ${event.name}`
-        })
+      const response = await axios.post('/user/bookings', {
+        eventId: event._id,
+        ticketType,
+        quantity,
+        customerNotes: `Booking for ${event.name}`
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create booking');
-      }
-
-      const data = await response.json();
+      const data = response.data;
       alert(`Booking created successfully! Total amount: ₹${data.booking.totalAmount.toLocaleString()}`);
       navigate('/bookings');
 
     } catch (err) {
-      alert('Error creating booking: ' + err.message);
+      alert('Error creating booking: ' + (err.response?.data?.message || err.message));
     } finally {
       setBookingLoading(false);
     }

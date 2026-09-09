@@ -1,8 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import axios from '../src/utils/axios';
 
 const AuthContext = createContext(undefined);
-
-const API_URL = '/api';
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -14,11 +13,9 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
       return;
     }
-    fetch(`${API_URL}/auth/me`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => {
+    axios.get('/auth/me')
+      .then(res => {
+        const data = res.data;
         if (data.status === 'success' && data.data?.user) {
           setCurrentUser(data.data.user);
         } else {
@@ -32,17 +29,8 @@ export const AuthProvider = ({ children }) => {
   const registerUser = async (userData) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/auth/register/user`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
-      });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        throw new Error(responseData.message || 'Registration failed');
-      }
+      const response = await axios.post('/auth/register/user', userData);
+      const responseData = response.data;
 
       if (!responseData.data || !responseData.data.user) {
         throw new Error('Invalid response from server');
@@ -53,7 +41,8 @@ export const AuthProvider = ({ children }) => {
       return responseData;
     } catch (error) {
       console.error('Registration error:', error);
-      throw error;
+      const errorMsg = error.response?.data?.message || error.message || 'Registration failed';
+      throw new Error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -62,17 +51,8 @@ export const AuthProvider = ({ children }) => {
   const registerOrganizer = async (organizerData) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/auth/register/organizer`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(organizerData)
-      });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        throw new Error(responseData.message || 'Registration failed');
-      }
+      const response = await axios.post('/auth/register/organizer', organizerData);
+      const responseData = response.data;
 
       if (!responseData.data || !responseData.data.user) {
         throw new Error('Invalid response from server');
@@ -83,7 +63,8 @@ export const AuthProvider = ({ children }) => {
       return responseData;
     } catch (error) {
       console.error('Organizer registration error:', error);
-      throw error;
+      const errorMsg = error.response?.data?.message || error.message || 'Registration failed';
+      throw new Error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -92,17 +73,8 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password, isOrganizer) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, isOrganizer })
-      });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        throw new Error(responseData.message || 'Login failed');
-      }
+      const response = await axios.post('/auth/login', { email, password, isOrganizer });
+      const responseData = response.data;
 
       if (!responseData.data || !responseData.data.user) {
         throw new Error('Invalid response from server');
@@ -112,7 +84,8 @@ export const AuthProvider = ({ children }) => {
       setCurrentUser(responseData.data.user);
     } catch (error) {
       console.error('Login error:', error);
-      throw error;
+      const errorMsg = error.response?.data?.message || error.message || 'Login failed';
+      throw new Error(errorMsg);
     } finally {
       setLoading(false);
     }

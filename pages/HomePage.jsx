@@ -4,6 +4,7 @@ import { categories } from '../data/dummyData';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import EventCard from '../components/EventCard';
+import axios from '../src/utils/axios';
 
 const HomePage = () => {
   const [publicEvents, setPublicEvents] = useState([]);
@@ -14,13 +15,8 @@ const HomePage = () => {
     const fetchPublicEvents = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/user/events');
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch events');
-        }
-
-        const data = await response.json();
+        const response = await axios.get('/user/events');
+        const data = response.data;
 
         const recentEvents = (data.events || []).
         sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).
@@ -28,7 +24,7 @@ const HomePage = () => {
 
         setPublicEvents(recentEvents);
       } catch (err) {
-        setError(err.message);
+        setError(err.response?.data?.message || err.message);
         console.error('Error fetching events:', err);
       } finally {
         setLoading(false);

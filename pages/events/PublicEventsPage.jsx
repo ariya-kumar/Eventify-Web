@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import EventCard from '../../components/EventCard';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import axios from '../../src/utils/axios';
 
 const PublicEventsPage = () => {
   const [events, setEvents] = useState([]);
@@ -18,22 +19,21 @@ const PublicEventsPage = () => {
     try {
       setLoading(true);
 
-      const eventsResponse = await fetch('http://localhost:5000/api/user/events');
-      if (!eventsResponse.ok) {
-        throw new Error('Failed to fetch events');
-      }
-      const eventsData = await eventsResponse.json();
+      const eventsResponse = await axios.get('/user/events');
+      const eventsData = eventsResponse.data;
 
-      const servicesResponse = await fetch('http://localhost:5000/api/user/services');
-      if (!servicesResponse.ok) {
-        console.log('Services endpoint not available yet');
+      let servicesData = { services: [] };
+      try {
+        const servicesResponse = await axios.get('/user/services');
+        servicesData = servicesResponse.data;
+      } catch (e) {
+        console.log('Services endpoint not available yet', e);
       }
-      const servicesData = (await servicesResponse.ok) ? await servicesResponse.json() : { services: [] };
 
       setEvents(eventsData.events || []);
       setServices(servicesData.services || []);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message);
       console.error('Error fetching data:', err);
     } finally {
       setLoading(false);

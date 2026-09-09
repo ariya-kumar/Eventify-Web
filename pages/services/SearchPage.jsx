@@ -3,6 +3,7 @@ import ServiceListItem from '../../components/ServiceListItem';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
+import axios from '../../src/utils/axios';
 
 const SearchPage = () => {
   const [services, setServices] = useState([]);
@@ -17,13 +18,9 @@ const SearchPage = () => {
     const fetchServices = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/user/services');
+        const response = await axios.get('/user/services');
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch services');
-        }
-
-        const data = await response.json();
+        const data = response.data;
         setServices(data.services || []);
         setFilteredServices(data.services || []);
       } catch (err) {

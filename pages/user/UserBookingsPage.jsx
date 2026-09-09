@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import axios from '../../src/utils/axios';
 
 const UserBookingsPage = () => {
   const { currentUser } = useAuth();
@@ -17,22 +18,11 @@ const UserBookingsPage = () => {
 
   const fetchUserBookings = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/user/bookings', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch bookings');
-      }
-
-      const data = await response.json();
+      const response = await axios.get('/user/bookings');
+      const data = response.data;
       setBookings(data.bookings || []);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message);
     } finally {
       setLoading(false);
     }
@@ -42,23 +32,11 @@ const UserBookingsPage = () => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/user/bookings/${bookingId}/cancel`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to cancel booking');
-      }
-
+      await axios.put(`/user/bookings/${bookingId}/cancel`);
       fetchUserBookings();
       alert('Booking cancelled successfully!');
     } catch (err) {
-      alert('Error cancelling booking: ' + err.message);
+      alert('Error cancelling booking: ' + (err.response?.data?.message || err.message));
     }
   };
 

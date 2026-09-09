@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import axios from '../../src/utils/axios';
 
 const ServiceDetailPage = () => {
   const { id } = useParams();
@@ -23,23 +24,15 @@ const ServiceDetailPage = () => {
   const fetchServiceDetails = async (serviceId) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/api/user/services/${serviceId}`);
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Service not found');
-        }
-        throw new Error('Failed to fetch service details');
-      }
-
-      const data = await response.json();
+      const response = await axios.get(`/user/services/${serviceId}`);
+      const data = response.data;
       setService(data.service);
       
       if (data.service.packages.length > 0) {
         setSelectedPackage(data.service.packages[0].name);
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message);
       console.error('Error fetching service details:', err);
     } finally {
       setLoading(false);
@@ -60,32 +53,18 @@ const ServiceDetailPage = () => {
 
     try {
       setBookingLoading(true);
-      const token = localStorage.getItem('token');
-
-      const response = await fetch('http://localhost:5000/api/user/bookings', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          serviceId: service._id,
-          packageName: selectedPackage,
-          customerNotes: `Booking for ${service.serviceType} service by ${service.organizerName}`
-        })
+      const response = await axios.post('/user/bookings', {
+        serviceId: service._id,
+        packageName: selectedPackage,
+        customerNotes: `Booking for ${service.serviceType} service by ${service.organizerName}`
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create booking');
-      }
-
-      const data = await response.json();
+      const data = response.data;
       alert(`Service booked successfully! Amount: ₹${data.booking.totalAmount.toLocaleString()}`);
       navigate('/bookings');
 
     } catch (err) {
-      alert('Error booking service: ' + err.message);
+      alert('Error booking service: ' + (err.response?.data?.message || err.message));
     } finally {
       setBookingLoading(false);
     }
